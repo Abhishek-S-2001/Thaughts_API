@@ -2,7 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const User = require('../models/userModel');
 
 const {JWT_Access_key, JWT_Refresh_key} = require('../config')
 
@@ -28,6 +28,7 @@ router.post('/register', async (req, res) => {
 
     // Create a default thought for the user
     const defaultThought = new Thought({
+      title: 'Default Thought',
       content: 'Welcome to Thoughts! Share your first thought.',
       author: newUser._id,
       visibility: 'public',

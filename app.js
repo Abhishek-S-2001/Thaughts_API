@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const thoughtsRoutes = require('./routes/thoughts')
+const usersRoutes = require('./routes/users');
 
 const app = express();
 const port = 3000;
@@ -19,6 +20,7 @@ db.once('open', () => {  console.log('MongoDB connected successfully');});
 // API routes
 app.use('/auth', authRoutes);
 app.use('/thoughts', thoughtsRoutes);
+app.use('/users', usersRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
