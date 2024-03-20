@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const Thought = require('../models/thoughtsModel')
 
 const {JWT_Access_key, JWT_Refresh_key} = require('../config')
 
@@ -52,12 +53,12 @@ router.post('/login', async (req, res) => {
       // Check if the user exists
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Email Not Registered!!' });
       }
       // Check if the password is correct
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Incorrect Password!!' });
       }
       // Generate a JWT
       const token = jwt.sign({ userId: user._id }, JWT_Access_key, { expiresIn: '1h' });

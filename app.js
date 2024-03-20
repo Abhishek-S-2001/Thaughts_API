@@ -1,14 +1,21 @@
 // app.js
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors')
+
 const authRoutes = require('./routes/auth');
 const thoughtsRoutes = require('./routes/thoughts')
 const usersRoutes = require('./routes/users');
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 8080;
+const body_parser = require('body-parser');
 
-app.use(express.json());
+// Middleware to parse JSON in the request body
+app.use(body_parser.json());
+
+// Use the CORS middleware
+app.use(cors());
 
 // Connect to MongoDB (use your MongoDB URI)
 mongoose.connect('mongodb://localhost:27017/Thoughts_db');
@@ -22,6 +29,10 @@ app.use('/auth', authRoutes);
 app.use('/thoughts', thoughtsRoutes);
 app.use('/users', usersRoutes);
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+app.get('/', (req, res) => {
+  return res.send(`API started on http://localhost:${PORT}`)
+})
+
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
 });
