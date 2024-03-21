@@ -15,7 +15,6 @@ router.get('/all', async (req, res) => {
     const thoughts = userId
       ? await Thought.find({ author: userId, visibility: 'public' })
       : await Thought.find({ visibility: 'public' });
-
     res.json({ thoughts });
   } catch (error) {
     console.error('Error retrieving thoughts:', error);
@@ -56,6 +55,7 @@ router.post('/add', authenticateToken, async (req, res) => {
 
     // Create a new thought with hashtags
     const newThought = new Thought({
+      username : user.username,
       title,
       content,
       author: userId,

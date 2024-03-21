@@ -1,7 +1,8 @@
 // middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
+const cryptojs = require('crypto-js');
 
-const {JWT_Access_key, JWT_Reference_key} = require('../config')
+const {JWT_Access_key, JWT_Access_Crypto_key} = require('../config')
 
 function authenticateToken(req, res, next) {
   const token = req.header('Authorization');
@@ -10,7 +11,10 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  jwt.verify(token, JWT_Access_key, (error, decodedUser) => {
+  let decryptedtoken = cryptojs.AES.decrypt(token, JWT_Access_Crypto_key)
+  decryptedtoken = decryptedtoken.toString(cryptojs.enc.Utf8);
+
+  jwt.verify(decryptedtoken, JWT_Access_key, (error, decodedUser) => {
     if (error) {
       return res.status(403).json({ error: 'Forbidden' });
     }
