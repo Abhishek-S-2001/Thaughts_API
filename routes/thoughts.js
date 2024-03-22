@@ -1,8 +1,10 @@
 // routes/thoughts.js
 const express = require('express');
 const { authenticateToken } = require('../middleware/authMiddleware');
-const User = require('../models/userModel');
+// const User = require('../models/userModel');
 const Thought = require('../models/thoughtsModel');
+const UserData = require('../models/userDataModel');
+
 const router = express.Router();
 
 
@@ -48,7 +50,7 @@ router.post('/add', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
 
     // Check if the user exists
-    const user = await User.findById(userId);
+    const user = await UserData.find({ author: userId });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -123,7 +125,7 @@ router.delete('/:thoughtId', authenticateToken, async (req, res) => {
     }
 
     // Remove the thought from the user's thoughts array
-    const user = await User.findById(userId);
+    const user = await UserData.find({ author: userId});
     user.thoughts = user.thoughts.filter((thought) => thought.toString() !== thoughtId);
     await user.save();
     await thought.remove();

@@ -2,9 +2,11 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/userModel');
-const Thought = require('../models/thoughtsModel')
 const CryptoJS = require('crypto-js')
+
+const User = require('../models/userModel');
+const Thought = require('../models/thoughtsModel');
+const UserData = require('../models/userDataModel');
 
 const {JWT_Access_key, JWT_Access_Crypto_key, crypto_key } = require('../config')
 
@@ -14,10 +16,16 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    // Check if the username is already registered
+    const existingUsername = await User.findOne({ email });
+    if (existingUsername) {
+      return res.status(400).json({ error: 'Username already used!!' });
+    }
+
     // Check if the email is already registered
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({ error: 'Email already registered!!' });
     }
     // Decrypt the password
     let decryptedpassword = CryptoJS.AES.decrypt(password, crypto_key)
@@ -44,9 +52,15 @@ router.post('/register', async (req, res) => {
     // Save the default thought to the database
     await defaultThought.save();
 
-    // Update the user's thoughts array
-    newUser.thoughts.push(defaultThought._id);
-    await newUser.save();
+    // Store UserData
+    const newUserData = new UserData({
+      author: newUser._id,
+      username: username,
+      name: username,
+      thoughts: defaultThought._id,
+    });
+
+    await newUserData.save();
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {

@@ -1,7 +1,7 @@
 // routes/users.js (new file)
 const express = require('express');
 const { authenticateToken } = require('../middleware/authMiddleware');
-const User = require('../models/userModel');
+const UserData = require('../models/userDataModel')
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.post('/follow/:userId', authenticateToken, async (req, res) => {
     const followerId = req.user.userId;
 
     // Check if the user to follow exists
-    const userToFollow = await User.findById(userId);
+    const userToFollow = await UserData.find({ author: userId});
     if (!userToFollow) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -42,7 +42,7 @@ router.post('/unfollow/:userId', authenticateToken, async (req, res) => {
     const followerId = req.user.userId;
 
     // Check if the user to unfollow exists
-    const userToUnfollow = await User.findById(userId);
+    const userToUnfollow = await UserData.find({ author: userId });
     if (!userToUnfollow) {
       return res.status(404).json({ error: 'User not found' });
     }
