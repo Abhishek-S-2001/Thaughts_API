@@ -50,7 +50,7 @@ router.post('/add', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
 
     // Check if the user exists
-    const user = await UserData.find({ author: userId });
+    const user = await UserData.findOne({ author: userId });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
