@@ -6,6 +6,15 @@ The Thoughts Social Platform is a web application built to provide users with a 
 
 The Thoughts API, powered by Node.js and Express.js, delivers a seamless thought-sharing experience while prioritizing secure authentication through JSON Web Tokens (JWT). Users can effortlessly create, explore, update, and delete thoughts via RESTful endpoints. Robust JWT authentication guarantees secure access to personalized thought data, with token expiration seamlessly managed for continuous access renewal. This API embraces scalability, aligning with contemporary authentication practices to provide a secure and efficient platform for expressing and connecting thoughts.
 
+# Thoughts API [ Backend ]
+```bash
+https://github.com/Abhishek-S-2001/Thoughts_API
+```
+# Thoughts-Connect [ FrontEnd ]
+```bash
+https://github.com/Abhishek-S-2001/Thoughts-Connect
+```
+
 ## Table of Contents
 
 - [Features](#features)
