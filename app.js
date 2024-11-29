@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors')
 
+const mongo = require('./config')
 const authRoutes = require('./routes/auth');
 const thoughtsRoutes = require('./routes/thoughts')
 const usersRoutes = require('./routes/users');
@@ -18,7 +19,7 @@ app.use(body_parser.json());
 app.use(cors());
 
 // Connect to MongoDB (use your MongoDB URI)
-mongoose.connect('mongodb://localhost:27017/Thoughts_db');
+mongoose.connect(`mongodb+srv://${mongo.mongo_user}:${mongo.mongo_passcode}@cluster0.zgbiw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => {  console.log('MongoDB connected successfully');});
