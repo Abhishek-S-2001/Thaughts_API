@@ -1,66 +1,78 @@
-// routes/auth.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const CryptoJS = require('crypto-js')
+const CryptoJS = require('crypto-js');
 
 const User = require('../models/userModel');
 const Thought = require('../models/thoughtsModel');
 const UserData = require('../models/userDataModel');
 
-const {JWT_Access_key, JWT_Access_Crypto_key, crypto_key } = require('../config')
+const { JWT_Access_key, JWT_Access_Crypto_key, crypto_key, adminSecretKey } = require('../config');
 
 const router = express.Router();
 
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    // Check if the username is already registered
-    const existingUsername = await User.findOne({ email });
-    if (existingUsername) {
-      return res.status(400).json({ error: 'Username already used!!' });
+    const { username, email, password, isAdmin, secretKey } = req.body;
+
+    // If user is admin, verify the secret key
+    if (isAdmin) {
+      const encryptedSecretKey = CryptoJS.AES.decrypt(secretKey, crypto_key).toString(CryptoJS.enc.Utf8);
+      if (encryptedSecretKey !== adminSecretKey) {
+        return res.status(400).json({ error: 'Invalid secret key for admin registration.' });
+      }
     }
 
-    // Check if the email is already registered
+    // Check if the username or email is already registered
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ error: 'Email already registered!!' });
     }
+
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      return res.status(400).json({ error: 'Username already used!!' });
+    }
+
     // Decrypt the password
-    let decryptedpassword = CryptoJS.AES.decrypt(password, crypto_key)
-    decryptedpassword = decryptedpassword.toString(CryptoJS.enc.Utf8);
+    let decryptedPassword = CryptoJS.AES.decrypt(password, crypto_key).toString(CryptoJS.enc.Utf8);
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(decryptedpassword, 10);
+    const hashedPassword = await bcrypt.hash(decryptedPassword, 10);
+
+    // Create new user
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
+      isAdmin,
     });
+
     await newUser.save();
 
-    // Create a default thought for the user
-    const defaultThought = new Thought({
-      username: username,
-      title: 'Default Thought',
-      content: 'Welcome to Thoughts! Share your first thought.',
-      author: newUser._id,
-      visibility: 'public',
-    });
+    // If not admin, create default thought
+    if (!isAdmin) {
+      const defaultThought = new Thought({
+        username: username,
+        title: 'Default Thought',
+        content: 'Welcome to Thoughts! Share your first thought.',
+        author: newUser._id,
+        visibility: 'public',
+      });
 
-    // Save the default thought to the database
-    await defaultThought.save();
+      await defaultThought.save();
 
-    // Store UserData
-    const newUserData = new UserData({
-      author: newUser._id,
-      username: username,
-      name: username,
-      thoughts: defaultThought._id,
-    });
+      // Store UserData
+      const newUserData = new UserData({
+        author: newUser._id,
+        username: username,
+        name: username,
+        thoughts: defaultThought._id,
+      });
 
-    await newUserData.save();
+      await newUserData.save();
+    }
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -69,36 +81,35 @@ router.post('/register', async (req, res) => {
   }
 });
 
-
 // Sign in a user
 router.post('/login', async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      // Check if the user exists
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(401).json({ error: 'Email Not Registered!!' });
-      }
+  try {
+    const { email, password } = req.body;
+    // Check if the user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ error: 'Email Not Registered!!' });
+    }
 
     // Decrypt the password
-    let decryptedpassword = CryptoJS.AES.decrypt(password, crypto_key)
-    decryptedpassword = decryptedpassword.toString(CryptoJS.enc.Utf8);
+    let decryptedPassword = CryptoJS.AES.decrypt(password, crypto_key).toString(CryptoJS.enc.Utf8);
 
-      // Check if the password is correct
-      const passwordMatch = await bcrypt.compare(decryptedpassword, user.password);
-      if (!passwordMatch) {
-        return res.status(401).json({ error: 'Incorrect Password!!' });
-      }
-      // Generate a JWT
-      const JWTtoken = jwt.sign({ userId: user._id }, JWT_Access_key, { expiresIn: '1h' });
-
-      const token = CryptoJS.AES.encrypt( JWTtoken, JWT_Access_Crypto_key).toString();
-      
-      res.json({ token });
-    } catch (error) {
-      console.error('Error signing in:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+    // Check if the password is correct
+    const passwordMatch = await bcrypt.compare(decryptedPassword, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Incorrect Password!!' });
     }
-  });
+
+    // Generate a JWT token
+    const JWTtoken = jwt.sign({ userId: user._id }, JWT_Access_key, { expiresIn: '1h' });
+
+    const token = CryptoJS.AES.encrypt(JWTtoken, JWT_Access_Crypto_key).toString();
+
+    res.json({ token });
+  } catch (error) {
+    console.error('Error signing in:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 module.exports = router;
